@@ -26,6 +26,12 @@ fi
 
 # resize the BASE_IMAGE to PROVISIONED_IMAGE_SIZE
 pushd ${CLOUD_IMAGES_DIR}
+if [ -f "${BASE_IMAGE}" ]; then
+  echo "Found ${BASE_IMAGE}"
+else
+  wget ${BASE_IMAGE_SOURCE_URL}
+fi
+
 qemu-img create -f qcow2 -F qcow2 -b ${BASE_IMAGE} ${PROVISIONED_IMAGE} ${PROVISIONED_IMAGE_SIZE}
 qemu-img info ${PROVISIONED_IMAGE}
 popd
