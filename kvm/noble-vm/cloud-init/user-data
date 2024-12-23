@@ -1,0 +1,105 @@
+#cloud-config
+
+# NOTICE:
+# NOTICE: This file is not yet templatized, so look for "TODO" and edit those appropriately
+# NOTICE: This file is customized for username "user"; edit those lines for a different username
+# NOTICE: 
+
+hostname: dev01
+fqdn: dev01.ostechdev.com
+manage_etc_hosts: true
+
+ssh_pwauth: false
+disable_root: true
+
+package_update: true
+
+packages:
+  - vim
+  - git
+  - curl
+  - wget
+
+swap:
+  filename: /swap.img
+  size: "auto" # or size in bytes
+  # TODO_SET_THE_SWAPFILE_SIZE_IN_THE_LINE_BELOW_AND_UNCOMMENT
+  # maxsize: 1073741824   # size in bytes
+
+users:
+  - name: user
+    home: /home/user
+    shell: /bin/bash
+    groups: sudo
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh-authorized-keys:
+      - ssh-ed25519 TODO_PUT_ANY_PUBKEYS_HERE_FOR_SSH_ACCESS user@hostname
+    no_ssh_fingerprints: false
+    ssh:
+      emit_keys_to_console: false
+
+
+write_files:
+  - path: /home/user/.ssh/id_ed25519
+    content: |
+      -----BEGIN OPENSSH PRIVATE KEY-----
+      TODO_PLACE_ED25519_PRIVATE_KEY_OF_THE_VM_HERE
+      -----END OPENSSH PRIVATE KEY-----
+    owner: 'user:user'
+    permissions: '0600'
+    defer: true
+  - path: /home/user/.ssh/id_ed25519.pub
+    content: |
+      ssh-ed25519 TODO_PLACE_ED25519_PUBLICK_KEY_OF_THE_VM_HERE user@dev01
+    owner: 'user:user'
+    permissions: '0644'
+    defer: true
+  - path: /home/user/.gitconfig
+    content: |
+      [user]
+        name = TODO_PUT_GIT_AUTHOR_NAME_HERE
+        email = TODO_PUT_GIT_AUTHOR_EMAIL_HERE
+    owner: 'user:user'
+    permissions: '0644'
+    defer: true
+  - path: /home/user/get-cloudinit-log.sh
+    content: |
+      sudo cat /var/log/cloud-init-output.log
+    owner: 'user:user'
+    permissions: '0755'
+    defer: true
+
+  - path: /usr/local/bin/install-tailscale.sh
+    content: |
+      #!/bin/bash
+      cd /tmp
+      wget https://tailscale.com/install.sh
+      chmod 755 ./install.sh
+      ./install.sh
+    owner: 'user:user'
+    permissions: '0755'
+    defer: true
+
+  - path: /usr/local/bin/install-docker.sh
+    content: |
+      #!/bin/bash
+      DISTRO=noble
+      DOCKER_USER=user
+      cd /tmp
+      apt install -y apt-transport-https ca-certificates curl software-properties-common
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+      add-apt-repository -y "deb [arch=amd64] https://download.docker.com/linux/ubuntu ${DISTRO} stable"
+      apt-cache policy docker-ce
+      echo "above should show ${DISTRO} in the Candidate line, cancel if it's wrong"
+      apt install -y docker-ce
+      usermod -aG docker ${DOCKER_USER}
+      usermod -aG docker ${DOCKER_USER}
+    owner: 'user:user'
+    permissions: '0755'
+    defer: true
+
+
+runcmd:
+  - [ "/usr/local/bin/install-docker.sh" ]
+  - [ "sudo", "-u", "user", "/usr/local/bin/install-tailscale.sh" ]
+

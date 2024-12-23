@@ -1,0 +1,28 @@
+---
+services:
+  code-server:
+    build: ./csplus
+    container_name: code-server
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - PASSWORD=devuserpw123 #optional
+      - HASHED_PASSWORD= #optional
+      - SUDO_PASSWORD=devuserpw123 #optional
+      - SUDO_PASSWORD_HASH= #optional
+      - PROXY_DOMAIN=tpy-code.ostechdev.com #optional
+      - DEFAULT_WORKSPACE=/config/workspace #optional
+    volumes:
+      - ./data:/config
+      # if docker command gets permission denied, set the perms of docker.sock to 666 on the host system
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - 8443:8443
+    restart: unless-stopped
+
+networks:
+  default:
+    external: true
+    name: proxynet
+
