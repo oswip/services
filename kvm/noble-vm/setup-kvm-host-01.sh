@@ -9,7 +9,6 @@ if [ -z "${KVM_USER}" ]
     KVM_USER=user
 fi
 
-
 echo "About to kvm for username:${KVM_USER}, cancel if it's wrong"
 
 sleep 5
@@ -23,4 +22,9 @@ sudo systemctl status libvirtd
 
 echo "you should log out and log back in to get access to kvm"
 
+sudo mkdir -p /opt/kvm/cloud_images
+sudo chown -R libvirt-qemu:kvm /opt/kvm/cloud_images
+sudo chmod 770 /opt/kvm/cloud_images
+
+ln -s /opt/kvm/cloud_images
 

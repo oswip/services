@@ -5,8 +5,10 @@
 
 
 VM_HOSTNAME=dev01
-IMAGE_SUBDIR=cloud_images
+CLOUD_IMAGES_DIR=/opt/kvm/cloud_images
+WORKING_DIR=${PWD}
 BASE_IMAGE=noble-server-cloudimg-amd64.img
+BASE_IMAGE_SOURCE_URL=https://cloud-images.ubuntu.com/noble/20241210/noble-server-cloudimg-amd64.img
 PROVISIONED_IMAGE=noble-server-amd64.qcow2
 CLOUD_INIT_IMAGE=cloud-init-provisioning.qcow2
 PROVISIONED_IMAGE_SIZE=20G
@@ -23,7 +25,7 @@ else
 fi
 
 # resize the BASE_IMAGE to PROVISIONED_IMAGE_SIZE
-pushd ${IMAGE_SUBDIR}
+pushd ${CLOUD_IMAGES_DIR}
 qemu-img create -f qcow2 -F qcow2 -b ${BASE_IMAGE} ${PROVISIONED_IMAGE} ${PROVISIONED_IMAGE_SIZE}
 qemu-img info ${PROVISIONED_IMAGE}
 popd
@@ -32,7 +34,7 @@ sleep 5
 # create a disk image that contains the cloudinit provisioning
 pushd cloud-init
 cloud-localds -v --network-config=network-config ${CLOUD_INIT_IMAGE} user-data meta-data
-mv ${CLOUD_INIT_IMAGE} ../${IMAGE_SUBDIR}
+mv ${CLOUD_INIT_IMAGE} ${CLOUD_IMAGES_DIR}/
 popd
 
 # create the vm
@@ -41,8 +43,8 @@ virt-install \
   --virt-type kvm \
   --vcpus 42 \
   --memory 6144 \
-  --disk path=${IMAGE_SUBDIR}/${PROVISIONED_IMAGE},device=disk \
-  --disk path=${IMAGE_SUBDIR}/${CLOUD_INIT_IMAGE},device=cdrom \
+  --disk path=${CLOUD_IMAGES_DIR}/${PROVISIONED_IMAGE},device=disk \
+  --disk path=${CLOUD_IMAGES_DIR}/${CLOUD_INIT_IMAGE},device=cdrom \
   --os-variant ubuntu24.04 \
   --graphics none \
   --sound none \
